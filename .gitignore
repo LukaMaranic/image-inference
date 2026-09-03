@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Environments and package artifacts
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Local runtime configuration and model data
+.env
+.env.*
+models/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
