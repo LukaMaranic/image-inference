@@ -1,0 +1,13 @@
+services:
+  inference:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    environment:
+      INFERENCE_TESSERACT_LANGUAGE: eng
+      INFERENCE_YOLO_MODEL: /app/models/yolov8n.pt
+    volumes:
+      - ./models:/app/models:ro
+    stop_grace_period: 3m
+

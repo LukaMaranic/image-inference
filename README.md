@@ -25,6 +25,58 @@ The first YOLOv8 request loads `models/yolov8n.pt`. Ultralytics downloads the pr
 weights if missing, so the first request requires network access and may take longer.
 For offline use, put your YOLOv8 detection weights at the configured path beforehand.
 
+## Docker
+
+The Docker setup targets CPU inference on Linux and includes Tesseract with English
+language data. Keep `models/yolov8n.pt` in the repository's local `models` directory;
+Compose mounts that directory read-only so inference does not depend on downloading the
+model at runtime.
+
+Build and start the service:
+
+```powershell
+docker compose build --no-cache
+docker compose up -d
+docker compose ps
+```
+
+Open http://127.0.0.1:8000/health and http://127.0.0.1:8000/docs. Stop the service with:
+
+```powershell
+docker compose down
+```
+
+The three-minute Compose shutdown grace period allows accepted jobs to finish and deliver
+their callbacks. When calling a server running directly on Docker Desktop's host, use
+`host.docker.internal` instead of `localhost` in image and callback URLs. Containers in
+the same Compose project should address each other by service name.
+
+### Docker verification
+
+Run these checks after every Docker-related change:
+
+```powershell
+# Confirm the runtime imports and system OCR installation.
+docker compose run --rm inference python -c "import cv2, torch, ultralytics, pytesseract; import src.main; print('runtime imports: ok')"
+docker compose run --rm inference tesseract --version
+docker compose run --rm inference tesseract --list-langs
+docker compose run --rm inference python -c "from pathlib import Path; p=Path('/app/models/yolov8n.pt'); assert p.is_file() and p.stat().st_size > 0; print('YOLO model: ok')"
+
+# Run API contract tests using the exact Python environment from the image.
+docker compose run --rm inference python utils.py test
+docker compose run --rm inference python utils.py test --yolo
+
+# Start the actual container and verify its configured command and health check.
+docker compose up -d
+docker compose ps
+docker compose exec inference python -c "import json, urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:8000/health')); assert data['status']=='ok'; print(data)"
+```
+
+The contract tests run a real Uvicorn process, real OCR, callbacks, concurrency checks,
+and optional real YOLO inference. In addition, verify at least one request through the
+published host port with image and callback servers reachable from the container. This
+catches Docker networking errors that an in-container test cannot reproduce.
+
 ## API
 
 `GET /health` reports the service status and active job count. It does not check model

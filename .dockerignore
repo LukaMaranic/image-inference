@@ -1,0 +1,15 @@
+.git
+.gitignore
+.venv
+.vscode
+.idea
+.pytest_cache
+.ruff_cache
+__pycache__
+*.py[cod]
+*.egg-info
+build
+dist
+.env
+.env.*
+models
